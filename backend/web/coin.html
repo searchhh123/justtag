@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>JustTag · Coin</title>
+  <meta name="description" content="JustTag is the fastest launchpad on X. Reply @JustTag under any post and it's live on Robinhood Chain in seconds, with creator fees paid to the X accounts in the split. Tag for free." />
+  <meta name="theme-color" content="#FFFFFF" />
+  <meta property="og:title" content="JustTag · Tag it. It's a coin." />
+  <meta property="og:description" content="Reply @JustTag under any post. Live on Robinhood Chain in seconds. Creator fees paid to the X accounts in the split. Tag for free." />
+  <meta property="og:image" content="/img/og.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/"><img src="/img/logo.svg" alt="" width="34" height="34" />JustTag</a>
+    <nav class="topnav"><a href="/#how">How it works</a><a href="/#pad">Launchpad</a><a href="/#live">Live</a><a href="/claim">Get paid</a></nav>
+    <div class="spacer"></div>
+    <button class="ca hidden" data-ca><b>CA</b><span></span></button>
+    <a class="btn btn-ink btn-sm" href="/#try">Tag for free</a>
+  </header>
+  <main class="page wrap" id="coin-root">
+    <div class="coin-layout">
+      <div>
+        <div class="coin-head"><img id="c-img" alt="" /><div><h1 id="c-name">Loading…</h1><span class="tk" id="c-ticker"></span> <span class="muted" id="c-src"></span></div></div>
+        <div class="stats">
+          <div class="stat"><small>Price</small><b id="s-price">–</b></div>
+          <div class="stat"><small>Market cap</small><b id="s-mcap">–</b></div>
+          <div class="stat"><small>Raised</small><b id="s-raised">–</b></div>
+          <div class="stat"><small>Holders</small><b id="s-holders">–</b></div>
+        </div>
+        <div><b>Bonding curve</b> <span class="muted" id="s-progress-text"></span><div class="progress"><div id="s-progress" style="width:0%"></div></div>
+          <p class="muted" style="font-size:14px;margin:4px 0 0" id="s-grad-note">When the curve sells out, the coin graduates to Uniswap on Robinhood Chain and the liquidity is burned.</p></div>
+        <h3 class="blk">Price</h3>
+        <svg class="chart" id="chart" viewBox="0 0 600 220" preserveAspectRatio="none"></svg>
+        <h3 class="blk">The post</h3>
+        <div id="c-post"></div>
+        <h3 class="blk">Creator fees</h3>
+        <div class="split-list" id="c-split"></div>
+        <h3 class="blk">Trades</h3>
+        <table class="list"><thead><tr><th>Side</th><th>ETH</th><th>Tokens</th><th>Trader</th><th>When</th></tr></thead><tbody id="c-trades"></tbody></table>
+      </div>
+      <aside class="trade-box" id="trade">
+        <div class="trade-tabs"><button class="buy on" data-side="buy">Buy</button><button class="sell" data-side="sell">Sell</button></div>
+        <div class="amount"><input id="t-amount" inputmode="decimal" placeholder="0.0" /><span id="t-unit">ETH</span></div>
+        <div class="quick" id="t-quick"></div>
+        <div class="quote" id="t-quote"></div>
+        <button class="btn btn-ink btn-lg" id="t-go">Connect wallet</button>
+        <p class="muted" style="font-size:13px;margin:12px 0 0">Max slippage 3%. Fees on every trade go to the protocol and to the creators in the split.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+          <a class="btn btn-soft btn-sm" id="l-explorer" target="_blank" rel="noopener">Explorer</a>
+          <a class="btn btn-soft btn-sm" id="l-copy" href="#">Copy address</a>
+        </div>
+      </aside>
+    </div>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="/dist/coin.js"></script>
+</body>
+</html>

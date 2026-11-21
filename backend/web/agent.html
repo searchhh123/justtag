@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>JustTag · Agent</title>
+  <meta name="description" content="JustTag is the fastest launchpad on X. Reply @JustTag under any post and it's live on Robinhood Chain in seconds, with creator fees paid to the X accounts in the split. Tag for free." />
+  <meta name="theme-color" content="#FFFFFF" />
+  <meta property="og:title" content="JustTag · Tag it. It's a coin." />
+  <meta property="og:description" content="Reply @JustTag under any post. Live on Robinhood Chain in seconds. Creator fees paid to the X accounts in the split. Tag for free." />
+  <meta property="og:image" content="/img/og.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/"><img src="/img/logo.svg" alt="" width="34" height="34" />JustTag</a>
+    <nav class="topnav"><a href="/#how">How it works</a><a href="/#pad">Launchpad</a><a href="/#live">Live</a><a href="/claim">Get paid</a></nav>
+    <div class="spacer"></div>
+    <button class="ca hidden" data-ca><b>CA</b><span></span></button>
+    <a class="btn btn-ink btn-sm" href="/#try">Tag for free</a>
+  </header>
+  <main class="page wrap">
+    <div class="claim-card" style="max-width:820px">
+      <span class="badge">Agent</span>
+      <h1 id="a-title" style="margin-top:12px">Your agent</h1>
+      <p class="muted" id="a-prompt" style="font-size:17px"></p>
+      <div class="split-list" id="a-routes" style="margin-top:18px"></div>
+      <div class="watching" style="color:var(--lime-deep)">Watching</div>
+      <div class="row"><a class="btn btn-ink" id="a-coin">Open your coin</a></div>
+      <h3 class="blk">Coins it launched</h3>
+      <div class="live-grid" id="a-launched" style="margin-top:12px"></div>
+    </div>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="/dist/agent.js"></script>
+</body>
+</html>

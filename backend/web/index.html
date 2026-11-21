@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>JustTag · Tag any post. It's a coin.</title>
+  <meta name="description" content="JustTag is the fastest launchpad on X. Reply @JustTag under any post and it's live on Robinhood Chain in seconds, with creator fees paid to the X accounts in the split. Tag for free." />
+  <meta name="theme-color" content="#FFFFFF" />
+  <meta property="og:title" content="JustTag · Tag it. It's a coin." />
+  <meta property="og:description" content="Reply @JustTag under any post. Live on Robinhood Chain in seconds. Creator fees paid to the X accounts in the split. Tag for free." />
+  <meta property="og:image" content="/img/og.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <header class="top" id="top">
+    <a class="brand" href="/"><img src="/img/logo.svg" alt="" width="34" height="34" />JustTag</a>
+    <nav class="topnav">
+      <a href="#how">How it works</a>
+      <a href="#pad">Launchpad</a>
+      <a href="#live">Live</a>
+      <a href="/claim">Get paid</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="ca hidden" data-ca><b>CA</b><span></span></button>
+    <a class="btn btn-ink btn-sm" href="#try" data-tag-cta>Tag for free</a>
+  </header>
+
+  <!-- ============================================================ hero -->
+  <section class="hero" id="hero">
+    <h1>Tag it.<br /><span class="hl">It's a coin.</span></h1>
+    <p class="lede">JustTag is the fastest launchpad on X. Reply <span class="mention" data-bot>@JustTag</span> under any post and it's live on Robinhood Chain in seconds, with the creator fees paid to the X accounts in your tag.</p>
+    <div class="ctas">
+      <a class="btn btn-ink btn-lg" href="#try">Tag for free</a>
+      <a class="btn btn-soft btn-lg" href="#pad">Launch with an agent</a>
+    </div>
+    <div class="chainbadge"><span class="dot"></span>Live on Robinhood Chain · $JUSTTAG</div>
+    <div class="wall" id="wall" aria-label="Posts tagged on JustTag"></div>
+  </section>
+
+  <!-- ============================================================ how -->
+  <section class="story wrap" id="how">
+    <h2 class="reveal">One tag.<br />Start to finish.</h2>
+    <div class="grid">
+      <ol class="steps">
+        <li class="reveal on"><div><h3>Tag</h3><p>Reply <span class="mention" data-bot>@JustTag</span> under the post. Add <b>70/30</b> or <b>all mine</b> to set the split, or add nothing: 50/50 with the poster is the default.</p></div></li>
+        <li class="reveal"><div><h3>JustTag picks</h3><p>It keeps the strongest picture in the post, cuts the coin image around the action, names it and writes the ticker.</p></div></li>
+        <li class="reveal"><div><h3>Live</h3><p>The coin goes live on a bonding curve on Robinhood Chain and JustTag answers under your tag with the link.</p></div></li>
+        <li class="reveal"><div><h3>Paid</h3><p>Every trade pays creator fees to the X accounts in the split. Sign in with X once, link a wallet, and every payout after that arrives by itself.</p></div></li>
+      </ol>
+      <div class="convo reveal" id="convo"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ split -->
+  <section class="split sec" id="split">
+    <div class="wrap">
+      <h2 class="reveal">Write the split<br />in the tag.</h2>
+      <p class="sub reveal">Whatever you type after <span class="mention" data-bot>@JustTag</span> is the deal. 50/50 with the poster unless you say otherwise.</p>
+      <div class="board">
+        <div class="reveal">
+          <div class="post" id="split-post"></div>
+          <div class="chips" id="split-chips">
+            <button class="chip on" data-tag="50/50">50/50</button>
+            <button class="chip" data-tag="all mine">all mine</button>
+            <button class="chip" data-tag="all to the poster">all to the poster</button>
+            <button class="chip" data-tag="70/30">70/30</button>
+            <button class="chip" data-tag="50/50 @friend">50/50 @friend</button>
+            <button class="chip" data-tag="$CATCAR Cat In The Car">$TICKER + name</button>
+          </div>
+        </div>
+        <div class="panel reveal">
+          <h4>Creator fees go to</h4>
+          <div class="bars" id="split-bars"></div>
+          <ul class="meta-list" id="split-meta"></ul>
+          <p class="muted" style="margin:14px 0 0;font-size:14px">Paid to each X account, automatically, once it has signed in and linked a wallet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ pick -->
+  <section class="pick sec" id="pick" style="background:var(--paper2)">
+    <div class="wrap">
+      <h2 class="reveal">No image? No name?<br />No ticker? Fine.</h2>
+      <p class="sub reveal">JustTag looks at every picture in the post, scores each one with vision AI, keeps the strongest, cuts the coin image around the action, names it and writes the ticker. A clip gives its cover frame. Attach your own image to the tag to override.</p>
+      <div class="cards">
+        <div class="pickcard reveal" style="background:#fff">
+          <p class="muted" style="margin:0 0 12px;font-weight:700;font-size:14px">2 photos in the post</p>
+          <div class="imgs">
+            <figure id="pk-a"><div style="width:100%;height:100%;background:linear-gradient(135deg,#d7e6f5,#9cb8d6)"></div><figcaption>4.1 / 10</figcaption></figure>
+            <figure id="pk-b" class="win"><div style="width:100%;height:100%;background:linear-gradient(135deg,#fde68a,#f59e0b)"></div><figcaption>8.7 / 10</figcaption></figure>
+          </div>
+          <div class="coinrow"><div class="coinimg" style="background:linear-gradient(135deg,#fde68a,#f59e0b)">8.7</div><div><b>The stronger one wins</b><span>Both photos scored. The best becomes the coin.</span></div></div>
+        </div>
+        <div class="pickcard reveal" style="background:#fff">
+          <p class="muted" style="margin:0 0 12px;font-weight:700;font-size:14px">A clip in the post</p>
+          <div class="imgs" style="grid-template-columns:1fr">
+            <figure class="win" style="aspect-ratio:16/9"><div style="width:100%;height:100%;background:linear-gradient(135deg,#c7f9cc,#22c55e)"></div><figcaption>Cover frame</figcaption></figure>
+          </div>
+          <div class="coinrow"><div class="coinimg" style="background:linear-gradient(135deg,#c7f9cc,#22c55e)">AI</div><div><b>Cut square around the action</b><span>Named from the post, ticker written for you.</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ try -->
+  <section class="try sec" id="try">
+    <div class="wrap">
+      <h2 class="reveal">Try it on any post.</h2>
+      <p class="sub reveal">Paste a link. See what JustTag would launch from it. Then tag it for real. Free.</p>
+      <form class="box reveal" id="try-form">
+        <input class="input" id="try-url" placeholder="https://x.com/someone/status/…" autocomplete="off" inputmode="url" />
+        <input class="input" id="try-tag" placeholder="50/50" style="max-width:200px" autocomplete="off" />
+        <button class="btn btn-ink btn-lg" type="submit" id="try-btn">Preview</button>
+      </form>
+      <div class="err hidden" id="try-err"></div>
+      <div class="result hidden" id="try-result"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ pad -->
+  <section class="pad" id="pad">
+    <div class="wrap">
+      <h2 class="reveal">Give your coin<br />an agent.</h2>
+      <p class="sub reveal">Launch your coin on JustTag and it gets an AI agent that launches new coins for you around the clock. GTA 6 is built in. Write a prompt for anything else. Every coin it launches pays back into yours.</p>
+      <div class="layout">
+        <form id="pad-form" autocomplete="off">
+          <div class="step">
+            <h4><i>1</i>Your coin</h4>
+            <div class="coin-fields">
+              <label class="drop-img" id="pad-img-drop">Image<input type="file" accept="image/*" id="pad-img" hidden /></label>
+              <div><label class="lbl" for="pad-name">Name</label><input class="dark-input" id="pad-name" maxlength="32" placeholder="Leonida Scout" /></div>
+              <div><label class="lbl" for="pad-ticker">Ticker</label><input class="dark-input" id="pad-ticker" maxlength="10" placeholder="$SCOUT" /></div>
+            </div>
+          </div>
+          <div class="step">
+            <h4><i>2</i>Its agent</h4>
+            <div class="tabs" id="pad-presets"></div>
+            <div class="srcs" id="pad-sources"></div>
+            <textarea class="dark-input hidden" id="pad-prompt" maxlength="600" placeholder="Launch a coin every time a new AI model drops, a viral robot clip takes off, or…"></textarea>
+          </div>
+          <div class="step">
+            <h4><i>3</i>Where the money goes</h4>
+            <div class="routes" id="pad-routes"></div>
+            <div class="total" id="pad-total"><span>Total</span><span>100%</span></div>
+          </div>
+          <div class="step">
+            <h4><i>4</i>Launch</h4>
+            <div class="wallet-row">
+              <a class="btn btn-soft" id="pad-x" href="/auth/x/login?returnTo=/%23pad">Sign in with X for your share</a>
+              <button class="btn btn-soft" type="button" id="pad-connect">Connect wallet</button>
+            </div>
+            <label class="lbl" for="pad-devbuy" style="margin-top:16px">Optional first buy (ETH)</label>
+            <input class="dark-input" id="pad-devbuy" inputmode="decimal" placeholder="0.0" />
+            <button class="btn btn-lime btn-lg" style="width:100%;margin-top:16px" type="submit" id="pad-launch">Launch coin + agent</button>
+            <p class="note" id="pad-note">One signature. Your wallet pays the launch on Robinhood Chain; the agent runs on your coin's own creator fees.</p>
+            <div class="err hidden" id="pad-err"></div>
+          </div>
+        </form>
+        <aside class="agentcard" id="pad-preview">
+          <div class="head">
+            <div class="coinimg" id="pv-img">?</div>
+            <div><h3 id="pv-name">Your coin</h3><span class="badge">Agent</span> <span style="color:var(--lime);font-weight:900;margin-left:6px" id="pv-ticker">$TICKER</span></div>
+          </div>
+          <p class="desc" id="pv-desc"></p>
+          <div class="split-mini" id="pv-split"></div>
+          <div class="watching">Watching</div>
+          <div class="ticker-feed"><div class="inner" id="pv-feed"></div></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ drop -->
+  <section class="sec" id="drop">
+    <div class="wrap">
+      <h2 class="reveal">Built for the drop.</h2>
+      <p class="sub reveal">When a moment hits the timeline, the first coin gets the attention. JustTag is built to be first: Robinhood Chain confirms in a fraction of a second.</p>
+      <div class="drops">
+        <div class="drop reveal"><h3>The account posts.</h3><p>Your agent reads the drop the second it lands and launches it before the replies load.</p><div class="result-pill"><span>Agent launch</span><small>automatic</small></div></div>
+        <div class="drop reveal"><h3>Someone finds the easter egg.</h3><p>Tag it before the quote posts start. Your tag, your split.</p><div class="result-pill"><span>Your tag</span><small>seconds</small></div></div>
+        <div class="drop reveal"><h3>A clip takes off.</h3><p>Agents watch engagement velocity and launch while it is still climbing.</p><div class="result-pill"><span>Agent launch</span><small>on the climb</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ money -->
+  <section class="money sec" style="background:var(--paper2)">
+    <div class="wrap layout">
+      <div>
+        <h2 class="reveal">Paid to your<br />X account.</h2>
+        <p class="sub reveal">Creator fees are owed to X accounts, not wallets. The fees wait on-chain under your handle until you claim them. No one else can touch them.</p>
+        <ul class="checks reveal">
+          <li>Sign in with X once and link any wallet.</li>
+          <li>Everything that already waited is paid out at once.</li>
+          <li>Every fee after that is pushed to you automatically. Nothing to claim.</li>
+          <li>Linking is free: JustTag pays the gas.</li>
+        </ul>
+        <div class="ctas reveal" style="margin-top:26px;display:flex;gap:12px;flex-wrap:wrap"><a class="btn btn-ink btn-lg" href="/claim">Get paid</a></div>
+      </div>
+      <div class="phone reveal" aria-hidden="true">
+        <div class="muted" style="font-weight:700;font-size:14px">Creator fees · ETH</div>
+        <div class="bal" id="money-bal">Ξ 0.00</div>
+        <div class="muted" style="font-size:14px">From your tags on JustTag</div>
+        <div id="money-acts" style="margin-top:14px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ live -->
+  <section class="sec" id="live">
+    <div class="wrap">
+      <h2 class="reveal">Live on JustTag.</h2>
+      <p class="sub reveal">Every coin here came from a tag or an agent. Straight from the chain.</p>
+      <div class="live-grid" id="live-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============================================================ footer -->
+  <footer class="foot" id="foot">
+    <div class="wrap">
+      <h2>Tag for free.</h2>
+      <div class="ctas">
+        <a class="btn btn-ink btn-lg" href="#try">Tag a post</a>
+        <a class="btn btn-soft btn-lg" href="#pad">Launch with an agent</a>
+      </div>
+      <button class="ca hidden" data-ca><b>CA</b><span></span></button>
+      <nav>
+        <a href="/" class="brand" style="font-size:18px"><img src="/img/logo.svg" alt="" width="26" height="26" />JustTag</a>
+        <a href="#" data-x-link target="_blank" rel="noopener">X</a>
+        <a href="https://robinhoodchain.blockscout.com" data-explorer-link target="_blank" rel="noopener">Explorer</a>
+        <a href="https://docs.robinhood.com/chain" target="_blank" rel="noopener">Robinhood Chain</a>
+        <a href="/claim">Get paid</a>
+      </nav>
+      <p class="legal">Memecoins are risky. Nothing here is financial advice. JustTag is not affiliated with X Corp. or Robinhood Markets. © 2026 JustTag</p>
+    </div>
+  </footer>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="/dist/home.js"></script>
+</body>
+</html>

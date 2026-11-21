@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>JustTag · Get paid</title>
+  <meta name="description" content="JustTag is the fastest launchpad on X. Reply @JustTag under any post and it's live on Robinhood Chain in seconds, with creator fees paid to the X accounts in the split. Tag for free." />
+  <meta name="theme-color" content="#FFFFFF" />
+  <meta property="og:title" content="JustTag · Tag it. It's a coin." />
+  <meta property="og:description" content="Reply @JustTag under any post. Live on Robinhood Chain in seconds. Creator fees paid to the X accounts in the split. Tag for free." />
+  <meta property="og:image" content="/img/og.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="/"><img src="/img/logo.svg" alt="" width="34" height="34" />JustTag</a>
+    <nav class="topnav"><a href="/#how">How it works</a><a href="/#pad">Launchpad</a><a href="/#live">Live</a><a href="/claim">Get paid</a></nav>
+    <div class="spacer"></div>
+    <button class="ca hidden" data-ca><b>CA</b><span></span></button>
+    <a class="btn btn-ink btn-sm" href="/#try">Tag for free</a>
+  </header>
+  <main class="page wrap">
+    <div class="claim-card">
+      <h1>Get paid for<br />your tags.</h1>
+      <p class="muted" style="font-size:18px">Creator fees on JustTag belong to X accounts. They wait on-chain under your handle until you link a wallet. After that, every payout is sent to you automatically.</p>
+      <div id="signed-out">
+        <a class="btn btn-ink btn-lg" href="/auth/x/login?returnTo=/claim" id="x-login">Sign in with X</a>
+      </div>
+      <div id="signed-in" class="hidden">
+        <div class="who"><img id="me-av" alt="" /><div><b id="me-name"></b><div class="muted" id="me-handle"></div></div><span style="flex:1"></span><button class="btn btn-soft btn-sm" id="logout">Sign out</button></div>
+        <div class="bal" id="me-bal">Ξ 0</div>
+        <div class="muted">waiting for you on Robinhood Chain</div>
+        <div id="bound" class="hidden" style="margin-top:18px;padding:14px;border-radius:14px;background:var(--lime-wash);font-weight:700"></div>
+        <label class="lbl" for="wallet" style="margin-top:22px;display:block;font-weight:700">Wallet on Robinhood Chain</label>
+        <div class="row"><input class="input" id="wallet" placeholder="0x…" autocomplete="off" /><button class="btn btn-soft" id="use-connected">Use my wallet</button></div>
+        <div class="row"><button class="btn btn-lime btn-lg" id="bind" style="flex:1">Link wallet and get paid</button></div>
+        <div class="err hidden" id="claim-err"></div>
+        <h3 class="blk">Coins that pay you</h3>
+        <div class="split-list" id="me-coins"></div>
+      </div>
+    </div>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="/dist/claim.js"></script>
+</body>
+</html>
