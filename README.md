@@ -8,6 +8,10 @@ This repo is the full product: smart contracts, the X bot, the AI coin picker, l
 contracts/   Solidity (Foundry): launchpad + bonding curve, token, airdrop. Tests fork Robinhood mainnet.
 backend/     Node 22 + TypeScript: X bot, AI picker, agents, payouts, indexer, API, serves the website
 backend/web/ Website (HTML/CSS + vanilla JS bundled with esbuild): landing, coin pages, trading, get paid, agents
+backend/test/ Full-stack e2e suite on a Robinhood mainnet fork, with a mock X API
+deploy/      docker-compose + Caddy (automatic HTTPS)
+brand/       X profile picture, X header, logo
+docs/        Launch kit: profile copy, pinned post, launch thread, saved replies
 ```
 
 ---
@@ -24,6 +28,11 @@ backend/web/ Website (HTML/CSS + vanilla JS bundled with esbuild): landing, coin
 | **Creator fees → X accounts** | Fees accrue on-chain under `keccak256("x:" + handle)`. The X account signs in with X on `/claim` and links a wallet. JustTag's attester signs that link (EIP-712) and the operator submits it, so the user pays no gas. Everything that was waiting is paid at once, and every later fee is pushed automatically by the payouts worker (`claimMany`). |
 | **Try it on any post** | `POST /api/preview` runs the real picker on any public post link and returns the coin JustTag would launch, plus a ready "Tag it for real" link. |
 | **Give your coin an agent** | From the website, a user launches a coin plus an agent with one transaction from their own wallet. The agent watches its sources (the GTA 6 preset), or an X search written by Claude from the user's prompt ("Anything"). It ranks posts by engagement velocity, asks Claude which ones are real moments, and launches child coins. Child coins pay their fees back into the parent coin's routes: **Holders** (ETH airdropped pro-rata), **Owner** (their X account), **Buyback** (buys the coin and sends it to the dead address), **Burn** (buys and burns), and **Post authors**. |
+| **Opt out** | Anyone can reply `@JustTag opt out`. After that, JustTag won't launch coins from their posts, they can't tag, and they're left out of splits (a friend's share goes back to the tagger). Agents skip their posts. `@JustTag opt in` undoes it. |
+| **Retries** | A launch that fails on-chain (RPC outage, gas) is retried up to 3 times within 6 hours with the same `launchId`, so it can never launch twice. The reply goes out once it's live. |
+| **Share cards** | Coin pages render their own title and Open Graph / Twitter tags on the server, because X's crawler doesn't run JavaScript. Each coin also gets a generated 1200x630 card (image, name, ticker, split). |
+| **After graduation** | The coin page keeps working: quotes and trades go through the Uniswap V2 router on Robinhood Chain, the price comes from the pool, and the indexer records pool swaps. |
+| **Monitoring** | `GET /api/status`: which workers are running, coin counts, indexer lag, operator address and a `lowGas` flag. Point an uptime monitor at it. |
 | **Live feed, coin pages, trading** | The indexer follows launchpad events and token transfers. Coin pages show price, market cap, curve progress, holders, chart and trades, and let people buy or sell from MetaMask, Rabby or Robinhood Wallet. |
 
 ### One honest difference from tagy.fun: X Money
@@ -54,8 +63,16 @@ Tagy says its fees are "paid out on X Money". **X has no public X Money payout A
 ## What's tested
 
 - **Contracts, 10 tests, all passing on a fork of Robinhood mainnet** (`cd contracts && forge test`): free and idempotent operator launches, paid public launches with a first buy, buy/sell round trip and fee math, the pair lock before graduation, **graduation into the real Uniswap V2 on Robinhood Chain** (including a griefing donation made to the pair beforehand), X-account binding with replay protection, Holders/Buyback/Burn routes, buyback through the pool after graduation, treasury withdrawal, and a fuzzed solvency check.
-- **Tag parser:** 12 unit tests (`cd backend && npm test`).
-- **Full stack end to end on a local mainnet fork** (`npm run e2e:fork`): deploy, the backend launches a coin, a trader buys, fees are escrowed under the poster's X handle, the wallet link is signed and submitted gaslessly, and the payout arrives. The website showed the coin's live curve, holders and trades from the chain.
+- **Tag parser:** 13 unit tests (`cd backend && npm test`).
+- **Full stack, 16 scenarios** (`cd backend && npm run e2e:fork`). The suite starts its own anvil fork of Robinhood mainnet, deploys fresh contracts with freshly generated keys, and drives the real bot, agents, payouts, indexer and API against a local mock of the X API:
+  - Bot: a `70/30 @friend` tag launches with that split and replies under the tag. A second tag on the same post gets the existing coin. Self-tag with `$TICKER Name`. Default 50/50. Daily limit.
+  - Fees accrue to X handles, and a gasless wallet link pays them out.
+  - Opt out and opt in, including an opted-out friend's share going back to the tagger.
+  - A launch that fails during an outage is retried and announced.
+  - The API and status endpoint. Share tags and cards.
+  - Website agent launch (prepare, wallet transaction, submit). The agent launches a child coin from a viral post, and child trades fund buyback, burn and a holders airdrop of the parent coin.
+  - Graduation into the real Uniswap V2, a router trade, and the indexed pool swap.
+- **CI:** `.github/workflows/ci.yml` runs all three suites on every push. Add a `ROBINHOOD_RPC_URL` secret if the public RPC rate-limits the runners.
 - **Not tested live, because they need your accounts:** the X bot against the real X API, X sign-in, and Claude calls. The code follows the documented endpoints and the Anthropic SDK, but please test them with your keys before announcing.
 
 ---
@@ -97,7 +114,7 @@ npm ci
 npm run build
 npm start
 ```
-Or use Docker: `docker build -t justtag backend` and run it with `-v justtag-data:/app/data --env-file backend/.env -p 8787:8787`. Put it behind HTTPS (Caddy or Cloudflare). X sign-in needs the HTTPS callback. For production, use a dedicated RPC endpoint (for example Alchemy `robinhood-mainnet`); the public one is rate-limited.
+Or, on a server with Docker and your domain's DNS pointing at it, run `docker compose -f deploy/docker-compose.yml up -d --build` (set `DOMAIN=yourdomain` in `deploy/.env`). That runs the backend behind Caddy, which gets HTTPS certificates automatically. X sign-in needs the HTTPS callback. For production, use a dedicated RPC endpoint (for example Alchemy `robinhood-mainnet`); the public one is rate-limited.
 
 ### 6. Launch $JUSTTAG
 Either run the script with the operator key (free launch):
@@ -108,19 +125,20 @@ forge script script/LaunchJustTag.s.sol --rpc-url https://rpc.mainnet.chain.robi
 ```
 Or tag the bot's own announcement post: `@JustTag $JUSTTAG JustTag all mine`. Edit `backend/web/justtag.json` with your domain first (it is the metadata the token points to). Then set `JUSTTAG_TOKEN_ADDRESS` so the header shows the CA.
 
-### 7. Seed the hero wall
+### 7. Set up the X profile
+Use `brand/x-avatar-400.png` and `brand/x-header-1500x500.png`, and the bio, pinned post and launch thread in `docs/launch-kit.md`.
+
+### 8. Seed the hero wall
 Set `WALL_POST_IDS` to the ids of real, popular posts. The wall shows them through the X API, along with the posts behind the latest coins. It never shows invented posts.
 
 ---
 
 ## Local fork test (no real money)
+Needs Foundry (`anvil`, `forge`) and Node 22.13 or newer:
 ```powershell
-anvil --fork-url https://rpc.mainnet.chain.robinhood.com --port 8545
+cd contracts; forge build; cd ../backend; npm ci; npm run e2e:fork
 ```
-```powershell
-cd contracts; $env:OWNER="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"; $env:ATTESTER="0x70997970C51812dc3A010C7d01b50e0d17dc79C8"; $env:OPERATOR=$env:OWNER; $env:TREASURY="0x90F79bf6EB2c4f870365E785982E1f101E93b906"; forge script script/Deploy.s.sol --rpc-url http://127.0.0.1:8545 --broadcast --private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-```
-Then copy `backend/.env.fork.example` to `backend/.env`, fill in the two addresses and the current block, and run `npm run e2e:fork` followed by `npm run serve`.
+The suite starts and stops anvil itself, on port 8546.
 
 ---
 

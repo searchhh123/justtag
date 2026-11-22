@@ -9,7 +9,7 @@ import { PRESETS, parentRecipients, searchQueryFor, validateRoutes } from "./age
 import { coinCard, coinPageHtml } from "./cards.js";
 import { curveOf, findTokenCreated, handleKey, launchIdFor, launchpadAddress, launchpadConfig, operator, operatorWallet, pendingOf, publicClient, signBind, walletOf } from "./chain.js";
 import { config } from "./config.js";
-import { db, isOptedOut, type AgentRow, type CoinRow } from "./db.js";
+import { db, isOptedOut, kvGet, type AgentRow, type CoinRow } from "./db.js";
 import { serializePost, shortId, toSplitInputs, type Recipient } from "./launcher.js";
 import { parseTag, postIdFromUrl, describeSplit } from "./parse.js";
 import { cropCoinImage, pickCoin, saveImage } from "./picker.js";
@@ -70,8 +70,23 @@ function session(c: Context) {
 
 // ------------------------------------------------------------------ public API
 
-app.get("/api/config", (c) =>
+let feeCache: { at: number; fees: { protocolBps: number; creatorBps: number; creationFeeWei: string } | null } = { at: 0, fees: null };
+async function fees() {
+  if (!config.launchpad) return null;
+  if (Date.now() - feeCache.at > 10 * 60_000) {
+    try {
+      const c = await launchpadConfig();
+      feeCache = { at: Date.now(), fees: { protocolBps: c.protocolFeeBps, creatorBps: c.creatorFeeBps, creationFeeWei: c.creationFee.toString() } };
+    } catch {
+      /* keep the last value */
+    }
+  }
+  return feeCache.fees;
+}
+
+app.get("/api/config", async (c) =>
   c.json({
+    fees: await fees(),
     origin: config.origin,
     domain: config.domain,
     bot: config.botHandle,
@@ -419,6 +434,35 @@ app.get("/api/agents", (c) => {
 // ------------------------------------------------------------------ website
 
 app.get("/health", (c) => c.json({ ok: true }));
+
+/** Operational status for monitoring (uptime checks, alerts on low operator gas or indexer lag). */
+app.get("/api/status", async (c) => {
+  const counts = db.prepare(
+    "SELECT SUM(status='live') AS live, SUM(status='failed') AS failed, SUM(status='pending') AS pending, SUM(graduated) AS graduated FROM coins",
+  ).get() as Record<string, number | null>;
+  const agents = (db.prepare("SELECT COUNT(*) AS n FROM agents WHERE status='active'").get() as { n: number }).n;
+  const out: Record<string, unknown> = {
+    chainId: config.chainId,
+    launchpad: config.launchpad ?? null,
+    coins: { live: counts.live ?? 0, failed: counts.failed ?? 0, pending: counts.pending ?? 0, graduated: counts.graduated ?? 0 },
+    activeAgents: agents,
+    mentionCursor: kvGet("mentions_since_id") ?? null,
+    workers: { bot: config.runBot && xConfigured() && !!operator, agents: config.runAgents && !!operator, payouts: config.runPayouts && !!operator, indexer: config.runIndexer && !!config.launchpad },
+    ai: !!(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN),
+  };
+  try {
+    const head = await publicClient.getBlockNumber();
+    const indexed = BigInt(kvGet("indexer_block") ?? config.launchpadDeployBlock.toString());
+    out.chain = { head: head.toString(), indexedTo: indexed.toString(), lagBlocks: (head - indexed).toString() };
+    if (operator) {
+      const bal = await publicClient.getBalance({ address: operator.address });
+      out.operator = { address: operator.address, balanceWei: bal.toString(), lowGas: bal < 5n * 10n ** 15n };
+    }
+  } catch (e) {
+    out.chain = { error: (e as Error).message.slice(0, 200) };
+  }
+  return c.json(out);
+});
 const page = (file: string) => (c: Context) => c.html(fs.readFileSync(path.join(webRoot, file), "utf8"));
 app.get("/coin/:token", (c) => {
   const html = fs.readFileSync(path.join(webRoot, "coin.html"), "utf8");

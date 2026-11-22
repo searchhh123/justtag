@@ -262,6 +262,18 @@ try {
     assert.equal(img.headers.get("content-type"), "image/png");
   });
 
+  await step("status endpoint reports workers, chain lag and operator gas; config exposes live fees", async () => {
+    const st = await (await app.request("/api/status")).json();
+    assert.equal(st.launchpad, launchpad);
+    assert.ok(st.coins.live >= 4);
+    assert.equal(st.operator.address, acct.operator.address);
+    assert.equal(st.operator.lowGas, false);
+    assert.ok(Number(st.chain.lagBlocks) >= 0);
+    const cfg = await (await app.request("/api/config")).json();
+    assert.deepEqual(cfg.fees, { protocolBps: 65, creatorBps: 60, creationFeeWei: parseEther("0.001").toString() });
+    assert.equal(cfg.router, "0x89e5DB8B5aA49aA85AC63f691524311AEB649eba");
+  });
+
   await step("coin pages carry server-rendered share tags and a 1200x630 preview card", async () => {
     const row = db.prepare("SELECT id, symbol FROM coins WHERE token = ?").get(token.toLowerCase()) as any;
     const html = await (await app.request(`/coin/${token}`)).text();

@@ -375,3 +375,12 @@ h3.blk { margin: 30px 0 10px; font-size: 20px; letter-spacing: -0.02em; }
 .claim-card .who img { width: 44px; height: 44px; border-radius: 50%; }
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(120px); padding: 14px 20px; border-radius: 14px; background: var(--ink); color: #fff; font-weight: 700; z-index: 100; transition: transform .4s var(--ease); max-width: calc(100vw - 32px); }
 .toast.show { transform: translateX(-50%) translateY(0); }
+
+/* faq */
+.faq-list { margin-top: 40px; max-width: 860px; border-top: 1px solid var(--line); }
+.faq-list details { border-bottom: 1px solid var(--line); }
+.faq-list summary { cursor: pointer; list-style: none; padding: 22px 40px 22px 0; font-size: 21px; font-weight: 800; letter-spacing: -0.02em; position: relative; }
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary::after { content: "+"; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 26px; font-weight: 700; color: var(--ink3); transition: transform .3s var(--ease); }
+.faq-list details[open] summary::after { transform: translateY(-50%) rotate(45deg); }
+.faq-list p { margin: 0 0 22px; color: var(--ink2); max-width: 720px; }

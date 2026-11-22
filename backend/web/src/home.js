@@ -4,6 +4,12 @@ import { $, $$, api, ago, connectWallet, esc, eth, exampleCard, initChrome, pct,
 
 const cfg = await initChrome();
 const BOT = cfg.bot;
+if (cfg.fees) {
+  const p = (b) => `${(b / 100).toFixed(2).replace(/\.?0+$/, "")}%`;
+  $$("[data-fee-total]").forEach((e) => (e.textContent = p(cfg.fees.protocolBps + cfg.fees.creatorBps)));
+  $$("[data-fee-creator]").forEach((e) => (e.textContent = p(cfg.fees.creatorBps)));
+  $$("[data-fee-protocol]").forEach((e) => (e.textContent = p(cfg.fees.protocolBps)));
+}
 
 // ------------------------------------------------------------------ hero wall (real posts only)
 

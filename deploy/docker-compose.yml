@@ -1,0 +1,36 @@
+# Production: JustTag backend behind Caddy (automatic HTTPS from Let's Encrypt).
+#   1. Point your domain's DNS A record at this server.
+#   2. Fill backend/.env (see backend/.env.example) and set DOMAIN below or in deploy/.env.
+#   3. docker compose -f deploy/docker-compose.yml up -d --build
+services:
+  justtag:
+    build: ../backend
+    env_file: ../backend/.env
+    restart: unless-stopped
+    volumes:
+      - justtag-data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-justtag.fun}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - justtag
+
+volumes:
+  justtag-data:
+  caddy-data:
+  caddy-config:
