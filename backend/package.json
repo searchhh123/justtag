@@ -15,7 +15,7 @@
     "test": "tsx --test src/**/*.test.ts",
     "typecheck": "tsc -p . --noEmit",
     "serve": "tsx src/index.ts",
-    "e2e:fork": "tsx scripts/e2e-local.ts",
+    "e2e:fork": "tsx test/e2e-fork.ts",
     "og": "node scripts/make-og.mjs"
   },
   "dependencies": {

@@ -11,13 +11,17 @@ const log = (...a: unknown[]) => console.log("[bot]", ...a);
 let botUserId = config.botUserId;
 let botHandle = config.botHandle;
 
-export async function startBot() {
+export async function initBot() {
   if (!botUserId) {
     const me = await getMe();
     botUserId = me.id;
     botHandle = me.username;
     log(`signed in as @${me.username} (${me.id})`);
   }
+}
+
+export async function startBot() {
+  await initBot();
   const loop = async () => {
     try {
       await pollOnce();
@@ -35,13 +39,16 @@ export async function startBot() {
   loop();
 }
 
-async function pollOnce() {
+export async function pollOnce() {
   const since = kvGet("mentions_since_id");
+  const initialised = kvGet("mentions_initialised") === "1";
   const { tweets, includes, newest } = await getMentions(botUserId!, since);
   // First run: don't launch for the whole mention history, just remember where we are.
-  if (!since) {
+  // (An account with no mentions yet has no id to remember, so track "initialised" separately.)
+  if (!initialised) {
     if (newest) kvSet("mentions_since_id", newest);
-    log("initialised mention cursor", newest ?? "(none)");
+    kvSet("mentions_initialised", "1");
+    log("initialised mention cursor", newest ?? "(no mentions yet)");
     return;
   }
   for (const t of tweets) {

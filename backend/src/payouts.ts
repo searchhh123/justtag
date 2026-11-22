@@ -55,7 +55,7 @@ export async function pushCreatorFees() {
   }
 }
 
-async function runAgentRoutes() {
+export async function runAgentRoutes() {
   if (!operatorWallet || !operator) return;
   const agents = db.prepare("SELECT * FROM agents WHERE token IS NOT NULL").all() as AgentRow[];
   for (const a of agents) {

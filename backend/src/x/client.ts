@@ -11,7 +11,8 @@ import { db } from "../db.js";
  * less than general post reads, and replies to a post that summoned the bot are billed as "summoned" creates.
  */
 
-const API = "https://api.x.com";
+// Overridable so the test suite can point the bot at a local mock of the X API.
+const API = process.env.X_API_BASE || "https://api.x.com";
 
 const pct = (s: string) =>
   encodeURIComponent(s).replace(/[!'()*]/g, (c) => "%" + c.charCodeAt(0).toString(16).toUpperCase());

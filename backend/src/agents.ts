@@ -140,7 +140,7 @@ async function candidatesFor(a: AgentRow): Promise<FullPost[]> {
   return out.filter((p) => !db.prepare("SELECT 1 FROM coins WHERE json_extract(post_json,'$.id') = ?").get(p.tweet.id));
 }
 
-async function runAgent(a: AgentRow) {
+export async function runAgent(a: AgentRow) {
   const today = new Date().toISOString().slice(0, 10);
   if (a.launches_day !== today) {
     db.prepare("UPDATE agents SET launches_today = 0, launches_day = ? WHERE id = ?").run(today, a.id);

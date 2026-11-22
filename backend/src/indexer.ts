@@ -41,7 +41,7 @@ export async function startIndexer() {
   loop();
 }
 
-async function indexRange(from: bigint, to: bigint) {
+export async function indexRange(from: bigint, to: bigint) {
   const pad = launchpadAddress();
   const logs = await publicClient.getLogs({ address: pad, fromBlock: from, toBlock: to });
   const known = (db.prepare("SELECT token FROM coins WHERE token IS NOT NULL").all() as { token: string }[]).map((r) => r.token.toLowerCase());
