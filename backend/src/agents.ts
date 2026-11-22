@@ -3,7 +3,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import type { Address } from "viem";
 import { z } from "zod";
 import { config } from "./config.js";
-import { db, kvGet, kvSet, type AgentRow } from "./db.js";
+import { db, isOptedOut, kvGet, kvSet, type AgentRow } from "./db.js";
 import { launchFromPost, type Recipient } from "./launcher.js";
 import { getUserByUsername, getUserPosts, post as xPost, searchRecent, type FullPost } from "./x/client.js";
 
@@ -136,8 +136,8 @@ async function candidatesFor(a: AgentRow): Promise<FullPost[]> {
     if (newest) kvSet(cursorKey, newest.toString());
     if (since) out.push(...posts);
   }
-  // never relaunch a post that already has a coin
-  return out.filter((p) => !db.prepare("SELECT 1 FROM coins WHERE json_extract(post_json,'$.id') = ?").get(p.tweet.id));
+  // never relaunch a post that already has a coin, and never use posts from accounts that opted out
+  return out.filter((p) => !isOptedOut(p.author.username) && !db.prepare("SELECT 1 FROM coins WHERE json_extract(post_json,'$.id') = ?").get(p.tweet.id));
 }
 
 export async function runAgent(a: AgentRow) {

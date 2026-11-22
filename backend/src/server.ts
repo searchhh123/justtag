@@ -9,7 +9,7 @@ import { PRESETS, parentRecipients, searchQueryFor, validateRoutes } from "./age
 import { coinCard, coinPageHtml } from "./cards.js";
 import { curveOf, findTokenCreated, handleKey, launchIdFor, launchpadAddress, launchpadConfig, operator, operatorWallet, pendingOf, publicClient, signBind, walletOf } from "./chain.js";
 import { config } from "./config.js";
-import { db, type AgentRow, type CoinRow } from "./db.js";
+import { db, isOptedOut, type AgentRow, type CoinRow } from "./db.js";
 import { serializePost, shortId, toSplitInputs, type Recipient } from "./launcher.js";
 import { parseTag, postIdFromUrl, describeSplit } from "./parse.js";
 import { cropCoinImage, pickCoin, saveImage } from "./picker.js";
@@ -143,6 +143,7 @@ app.post("/api/preview", async (c) => {
     split: parsed.split,
     splitText: describeSplit(parsed.split),
     existing: existing ?? null,
+    optedOut: isOptedOut(post.author.username),
     tagIntent: `https://x.com/intent/post?in_reply_to=${id}&text=${encodeURIComponent(`@${config.botHandle} ${tag ?? "50/50"}`)}`,
   };
   if (!tag) previewCache.set(id, { at: Date.now(), body });

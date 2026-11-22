@@ -87,7 +87,7 @@ $("#try-form").addEventListener("submit", async (e) => {
         <div class="row"><span>Image</span><span>${r.scores.length ? `best of ${r.scores.length} · ${r.scores[r.chosen] ?? "–"}/10` : "generated"}</span></div>
         <div class="row"><span>Creator fees</span><span>${esc(r.splitText.replaceAll("@you", "you"))}</span></div>
         <div class="row"><span>Chain</span><span>Robinhood Chain</span></div>
-        ${r.existing ? `<a class="btn btn-lime btn-lg" href="/coin/${esc(r.existing.token)}">Already a coin: $${esc(r.existing.symbol)}</a>` : r.safe ? `<a class="btn btn-lime btn-lg" href="${esc(r.tagIntent)}" target="_blank" rel="noopener">Tag it for real</a>` : `<p class="err">JustTag won't launch this post.</p>`}
+        ${r.existing ? `<a class="btn btn-lime btn-lg" href="/coin/${esc(r.existing.token)}">Already a coin: $${esc(r.existing.symbol)}</a>` : r.optedOut ? `<p class="err">@${esc(r.post.handle)} opted out of JustTag.</p>` : r.safe ? `<a class="btn btn-lime btn-lg" href="${esc(r.tagIntent)}" target="_blank" rel="noopener">Tag it for real</a>` : `<p class="err">JustTag won't launch this post.</p>`}
       </div>`;
     $("#try-result").classList.remove("hidden");
   } catch (ex) {

@@ -126,3 +126,11 @@ export function postIdFromUrl(input: string): string | null {
   const m = s.match(/(?:x|twitter)\.com\/[^/]+\/status(?:es)?\/(\d{5,25})/i);
   return m ? m[1] : null;
 }
+
+/** "@JustTag opt out" / "@JustTag opt in", with nothing else in the post. */
+export function parseCommand(text: string): "optout" | "optin" | null {
+  const body = text.replace(/https?:\/\/\S+/g, "").replace(/@\w{1,15}/g, "").trim().toLowerCase();
+  if (/^opt[\s-]?out[.!]*$/.test(body)) return "optout";
+  if (/^opt[\s-]?in[.!]*$/.test(body)) return "optin";
+  return null;
+}

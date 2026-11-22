@@ -202,6 +202,53 @@ try {
     assert.equal(await pub.getBalance({ address: payee }), owed);
   });
 
+  // ================================================================== opt-out + retries
+  const quiet = mock.addUser({ id: "105", name: "Quiet One", username: "quiet_one" });
+  const fan = mock.addUser({ id: "106", name: "Fan One", username: "fan_one" });
+
+  await step("'@JustTag opt out' blocks tags on that account's posts and keeps it out of splits", async () => {
+    const cmd = tweet({ author_id: quiet.id, text: "@JustTag opt out" });
+    mock.mentions.push(cmd.id);
+    await pollOnce();
+    assert.match(mock.replies.at(-1)!.text, /won't launch coins from your posts/);
+
+    const p = tweet({ author_id: quiet.id, text: "A post from someone who opted out" });
+    const tag = tweet({ author_id: fan.id, text: "@quiet_one @JustTag", referenced_tweets: [{ type: "replied_to", id: p.id }] });
+    mock.mentions.push(tag.id);
+    await pollOnce();
+    assert.equal(coinByTag(tag.id), undefined);
+    assert.match(mock.replies.at(-1)!.text, /opted out of JustTag/);
+
+    // naming the opted-out account as a friend: its share goes back to the tagger
+    const p2 = tweet({ author_id: poster.id, text: "Friend split with an opted-out friend" });
+    const tag2 = tweet({ author_id: fan.id, text: "@poster_one @JustTag 60/40 @quiet_one", referenced_tweets: [{ type: "replied_to", id: p2.id }] });
+    mock.mentions.push(tag2.id);
+    await pollOnce();
+    assert.deepEqual(await splitsOf(coinByTag(tag2.id)!.token), [[handleKey("fan_one"), 10000]]);
+
+    const back = tweet({ author_id: quiet.id, text: "@JustTag opt in" });
+    mock.mentions.push(back.id);
+    await pollOnce();
+    assert.match(mock.replies.at(-1)!.text, /You're back in/);
+  });
+
+  await step("a launch that fails on-chain is retried and announced once it goes through", async () => {
+    const { retryFailedLaunches } = await import("../src/bot.js");
+    await testClient.setBalance({ address: acct.operator.address, value: 0n }); // operator can't pay gas
+    const p = tweet({ author_id: poster.id, text: "Launch during an outage" });
+    const tag = tweet({ author_id: fan.id, text: "@poster_one @JustTag", referenced_tweets: [{ type: "replied_to", id: p.id }] });
+    mock.mentions.push(tag.id);
+    await pollOnce();
+    assert.equal(coinByTag(tag.id)!.status, "failed");
+    const repliesBefore = mock.replies.length;
+    await testClient.setBalance({ address: acct.operator.address, value: parseEther("1000") });
+    await retryFailedLaunches();
+    const c = coinByTag(tag.id)!;
+    assert.equal(c.status, "live", c.error);
+    assert.equal(mock.replies.length, repliesBefore + 1);
+    assert.equal(mock.replies.at(-1)!.inReplyTo, tag.id);
+  });
+
   // ================================================================== HTTP API
   await step("API: feed, coin, metadata and image", async () => {
     const feed = await (await app.request("/api/feed")).json();

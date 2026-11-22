@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseTag, postIdFromUrl, describeSplit } from "./parse.js";
+import { parseCommand, parseTag, postIdFromUrl, describeSplit } from "./parse.js";
 
 const o = { bot: "JustTag", tagger: "you", poster: "Dexerto" };
 const p = (t: string) => parseTag(t, o);
@@ -45,3 +45,10 @@ test("post id from url", () => {
   assert.equal(postIdFromUrl("nope"), null);
 });
 test("describe", () => assert.equal(describeSplit([{ handle: "a", bps: 5000 }, { handle: "b", bps: 5000 }]), "50% @a, 50% @b"));
+test("opt out / opt in commands", () => {
+  assert.equal(parseCommand("@JustTag opt out"), "optout");
+  assert.equal(parseCommand("@JustTag optout!"), "optout");
+  assert.equal(parseCommand("@poster @JustTag opt-in"), "optin");
+  assert.equal(parseCommand("@JustTag opt out of this nonsense 70/30"), null);
+  assert.equal(parseCommand("@JustTag 50/50"), null);
+});

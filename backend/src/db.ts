@@ -152,3 +152,21 @@ export type AgentRow = {
   launches_day: string | null;
   created_at: number;
 };
+
+// ---- added after v0.1: opt-outs and launch retries
+db.exec(`CREATE TABLE IF NOT EXISTS optouts (handle TEXT PRIMARY KEY, at INTEGER NOT NULL);`);
+try {
+  db.exec("ALTER TABLE coins ADD COLUMN attempts INTEGER NOT NULL DEFAULT 0");
+} catch {
+  /* column exists */
+}
+
+/** Accounts that asked JustTag never to launch coins from their posts or put them in a split. */
+export function isOptedOut(handle: string): boolean {
+  return !!db.prepare("SELECT 1 FROM optouts WHERE handle = ?").get(handle.replace(/^@/, "").toLowerCase());
+}
+export function setOptOut(handle: string, out: boolean) {
+  const h = handle.replace(/^@/, "").toLowerCase();
+  if (out) db.prepare("INSERT OR REPLACE INTO optouts (handle, at) VALUES (?, ?)").run(h, Date.now());
+  else db.prepare("DELETE FROM optouts WHERE handle = ?").run(h);
+}
