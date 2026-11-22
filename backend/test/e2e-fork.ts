@@ -215,6 +215,21 @@ try {
     assert.equal(img.headers.get("content-type"), "image/png");
   });
 
+  await step("coin pages carry server-rendered share tags and a 1200x630 preview card", async () => {
+    const row = db.prepare("SELECT id, symbol FROM coins WHERE token = ?").get(token.toLowerCase()) as any;
+    const html = await (await app.request(`/coin/${token}`)).text();
+    assert.match(html, new RegExp(`<title>\\$${row.symbol} · `));
+    assert.match(html, new RegExp(`og:image" content="[^"]+/og/${row.id}\\.png"`));
+    assert.match(html, /twitter:card" content="summary_large_image"/);
+    const card = await app.request(`/og/${row.id}.png`);
+    const buf = Buffer.from(await card.arrayBuffer());
+    const { default: sharp } = await import("sharp");
+    const meta = await sharp(buf).metadata();
+    assert.equal(meta.width, 1200);
+    assert.equal(meta.height, 630);
+    if (process.env.E2E_CARD_OUT) fs.writeFileSync(process.env.E2E_CARD_OUT, buf);
+  });
+
   // ================================================================== agent coin from the website
   let agentId = "";
   let parent: Address;

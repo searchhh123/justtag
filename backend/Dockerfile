@@ -1,4 +1,6 @@
 FROM node:22-slim
+# fonts for the server-rendered share cards
+RUN apt-get update && apt-get install -y --no-install-recommends fonts-dejavu-core && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci

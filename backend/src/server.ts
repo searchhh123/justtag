@@ -6,6 +6,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 import { encodeFunctionData, isAddress, type Address, type Hex } from "viem";
 import { launchpadAbi } from "./abi.js";
 import { PRESETS, parentRecipients, searchQueryFor, validateRoutes } from "./agents.js";
+import { coinCard, coinPageHtml } from "./cards.js";
 import { curveOf, findTokenCreated, handleKey, launchIdFor, launchpadAddress, launchpadConfig, operator, operatorWallet, pendingOf, publicClient, signBind, walletOf } from "./chain.js";
 import { config } from "./config.js";
 import { db, type AgentRow, type CoinRow } from "./db.js";
@@ -418,7 +419,20 @@ app.get("/api/agents", (c) => {
 
 app.get("/health", (c) => c.json({ ok: true }));
 const page = (file: string) => (c: Context) => c.html(fs.readFileSync(path.join(webRoot, file), "utf8"));
-app.get("/coin/:token", page("coin.html"));
+app.get("/coin/:token", (c) => {
+  const html = fs.readFileSync(path.join(webRoot, "coin.html"), "utf8");
+  const t = c.req.param("token").toLowerCase();
+  const row = db.prepare("SELECT * FROM coins WHERE token = ? OR id = ?").get(t, t) as CoinRow | undefined;
+  return c.html(row ? coinPageHtml(html, row) : html);
+});
+app.get("/og/:file", async (c) => {
+  const id = c.req.param("file").replace(/\.png$/, "");
+  const row = db.prepare("SELECT * FROM coins WHERE id = ?").get(id) as CoinRow | undefined;
+  if (!row) return c.redirect("/img/og.png");
+  c.header("content-type", "image/png");
+  c.header("cache-control", "public, max-age=86400");
+  return c.body(new Uint8Array(await coinCard(row)));
+});
 app.get("/claim", page("claim.html"));
 app.get("/agent/:id", page("agent.html"));
 app.use("/dist/*", async (c, next) => { await next(); c.header("cache-control", "no-cache"); });
