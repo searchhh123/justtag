@@ -34,6 +34,9 @@ export const config = {
   explorer: env("EXPLORER_URL", "https://robinhoodchain.blockscout.com"),
   launchpad: opt("LAUNCHPAD_ADDRESS") as `0x${string}` | undefined,
   airdrop: opt("AIRDROP_ADDRESS") as `0x${string}` | undefined,
+  // Uniswap V2 on Robinhood Chain (verified on-chain: router.factory() and router.WETH() match)
+  dexRouter: env("DEX_ROUTER", "0x89e5DB8B5aA49aA85AC63f691524311AEB649eba") as `0x${string}`,
+  weth: env("WETH_ADDRESS", "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73") as `0x${string}`,
   launchpadDeployBlock: BigInt(env("LAUNCHPAD_DEPLOY_BLOCK", "0")),
   operatorKey: opt("OPERATOR_PRIVATE_KEY") as `0x${string}` | undefined,
   attesterKey: opt("ATTESTER_PRIVATE_KEY") as `0x${string}` | undefined,

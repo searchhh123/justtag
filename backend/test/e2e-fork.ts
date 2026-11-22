@@ -278,6 +278,37 @@ try {
     assert.equal(pendingHolders, 0n);
   });
 
+  // ================================================================== graduation → Uniswap
+  await step("a sold-out curve graduates; the site's router path trades it and the indexer records the swap", async () => {
+    await buy(token, "10"); // more than the curve can absorb: the rest is refunded
+    const coinApi = await (await app.request(`/api/coin/${token}`)).json();
+    assert.equal(coinApi.curve.graduated, true);
+    await indexRange(deployBlock, await pub.getBlockNumber());
+    const row = db.prepare("SELECT graduated, pair FROM coins WHERE token = ?").get(token.toLowerCase()) as any;
+    assert.equal(row.graduated, 1);
+
+    const ROUTER = "0x89e5DB8B5aA49aA85AC63f691524311AEB649eba";
+    const routerAbi = [
+      { type: "function", name: "getAmountsOut", stateMutability: "view", inputs: [{ type: "uint256" }, { type: "address[]" }], outputs: [{ type: "uint256[]" }] },
+      { type: "function", name: "swapExactETHForTokens", stateMutability: "payable", inputs: [{ type: "uint256" }, { type: "address[]" }, { type: "address" }, { type: "uint256" }], outputs: [{ type: "uint256[]" }] },
+    ] as const;
+    const amounts = await pub.readContract({ address: ROUTER, abi: routerAbi, functionName: "getAmountsOut", args: [parseEther("0.1"), [WETH, token]] });
+    const before = (await pub.readContract({ address: token, abi: tokenAbi, functionName: "balanceOf", args: [acct.trader.address] })) as bigint;
+    const h = await trader.writeContract({ address: ROUTER, abi: routerAbi, functionName: "swapExactETHForTokens", args: [(amounts[1] * 97n) / 100n, [WETH, token], acct.trader.address, BigInt(Math.floor(Date.now() / 1000) + 600)], value: parseEther("0.1") });
+    const rc = await pub.waitForTransactionReceipt({ hash: h });
+    const after = (await pub.readContract({ address: token, abi: tokenAbi, functionName: "balanceOf", args: [acct.trader.address] })) as bigint;
+    assert.equal(after - before, amounts[1]);
+
+    await indexRange(rc.blockNumber, rc.blockNumber);
+    const swap = db.prepare("SELECT * FROM trades WHERE tx_hash = ?").get(h) as any;
+    assert.ok(swap, "swap indexed");
+    assert.equal(swap.is_buy, 1);
+    assert.equal(swap.eth_wei, parseEther("0.1").toString());
+    const live = await (await app.request(`/api/coin/${token}`)).json();
+    assert.ok(BigInt(live.curve.liquidityWei) > parseEther("3"), "pool holds the graduated ETH");
+    assert.ok(BigInt(live.curve.priceWei) > 0n);
+  });
+
   console.log(`\nE2E OK: ${passed} scenarios passed against a Robinhood Chain mainnet fork.`);
 } catch (e) {
   console.error("\nFAILED:", e);

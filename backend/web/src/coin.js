@@ -8,6 +8,14 @@ const pub = publicClientFor(cfg);
 const SLIPPAGE_BPS = 300n;
 let side = "buy";
 let data;
+let dex = false; // true once the coin has graduated to its Uniswap V2 pool
+
+// Uniswap V2 Router02 on Robinhood Chain (address from /api/config)
+const routerAbi = [
+  { type: "function", name: "getAmountsOut", stateMutability: "view", inputs: [{ name: "amountIn", type: "uint256" }, { name: "path", type: "address[]" }], outputs: [{ type: "uint256[]" }] },
+  { type: "function", name: "swapExactETHForTokens", stateMutability: "payable", inputs: [{ name: "amountOutMin", type: "uint256" }, { name: "path", type: "address[]" }, { name: "to", type: "address" }, { name: "deadline", type: "uint256" }], outputs: [{ type: "uint256[]" }] },
+  { type: "function", name: "swapExactTokensForETH", stateMutability: "nonpayable", inputs: [{ name: "amountIn", type: "uint256" }, { name: "amountOutMin", type: "uint256" }, { name: "path", type: "address[]" }, { name: "to", type: "address" }, { name: "deadline", type: "uint256" }], outputs: [{ type: "uint256[]" }] },
+];
 
 async function load() {
   try {
@@ -23,7 +31,7 @@ async function load() {
   $("#c-ticker").textContent = `$${coin.symbol}`;
   $("#c-src").textContent = coin.source === "agent" ? "· launched by an agent" : coin.source === "pad" ? "· agent coin" : coin.tagger ? `· tagged by @${coin.tagger}` : "";
 
-  const priceWei = curve ? (BigInt(curve.virtualEth) * 10n ** 18n) / BigInt(curve.virtualToken) : coin.priceWei ? BigInt(coin.priceWei) : null;
+  const priceWei = curve?.priceWei ? BigInt(curve.priceWei) : coin.priceWei ? BigInt(coin.priceWei) : null;
   $("#s-price").textContent = priceWei != null ? `Ξ ${tinyEth(priceWei)}` : "–";
   $("#s-mcap").textContent = priceWei != null ? `Ξ ${eth(priceWei * 1_000_000_000n, 2)}` : "–";
   $("#s-raised").textContent = curve ? `Ξ ${eth(curve.realEth, 3)}` : "–";
@@ -34,7 +42,11 @@ async function load() {
   }
   if (coin.graduated || curve?.graduated) {
     $("#s-grad-note").innerHTML = `This coin graduated. Its liquidity is in a Uniswap V2 pool on Robinhood Chain (<a class="mention" target="_blank" rel="noopener" href="${cfg.explorer}/address/${esc(coin.pair)}">pool</a>), LP burned.`;
-    $("#trade").innerHTML = `<b>Graduated</b><p class="muted">Trade $${esc(coin.symbol)} on Uniswap (Robinhood Chain).</p><a class="btn btn-ink btn-lg" style="width:100%" target="_blank" rel="noopener" href="${cfg.explorer}/token/${esc(coin.token)}">View token</a>`;
+    if (!dex) {
+      dex = true;
+      $("#t-route").textContent = "Trading on Uniswap V2 (Robinhood Chain).";
+    }
+    if (curve?.liquidityWei) $("#s-raised").textContent = `Ξ ${eth(curve.liquidityWei, 3)} pool`;
   }
 
   $("#c-post").innerHTML = coin.post ? postCard(coin.post, { tagLine: false }) : `<p class="muted">${esc(coin.description ?? "")}</p>`;
@@ -92,7 +104,16 @@ async function quote() {
   const v = $("#t-amount").value.trim();
   if (!v || !cfg.launchpad || !data) return ($("#t-quote").textContent = "");
   try {
-    if (side === "buy") {
+    if (dex) {
+      const amtIn = side === "buy" ? parseEther(v) : parseUnits(v, 18);
+      const path = side === "buy" ? [cfg.weth, data.coin.token] : [data.coin.token, cfg.weth];
+      const amounts = await pub.readContract({ address: cfg.router, abi: routerAbi, functionName: "getAmountsOut", args: [amtIn, path] });
+      const out = amounts[amounts.length - 1];
+      lastQuote = { in: amtIn, out };
+      $("#t-quote").textContent = side === "buy"
+        ? `≈ ${Number(formatUnits(out, 18)).toLocaleString("en", { maximumFractionDigits: 0 })} $${data.coin.symbol} · Uniswap 0.3% fee`
+        : `≈ Ξ ${eth(out, 6)} · Uniswap 0.3% fee`;
+    } else if (side === "buy") {
       const wei = parseEther(v);
       const [out, fee] = await pub.readContract({ address: cfg.launchpad, abi: launchpadAbi, functionName: "quoteBuy", args: [data.coin.token, wei] });
       lastQuote = { in: wei, out };
@@ -126,16 +147,21 @@ $("#t-go").addEventListener("click", async () => {
     let hash;
     if (side === "buy") {
       btn.innerHTML = '<span class="spinner"></span> Confirm in wallet';
-      hash = await w.client.writeContract({ address: cfg.launchpad, abi: launchpadAbi, functionName: "buy", args: [data.coin.token, minOut, w.address, deadline], value: lastQuote.in });
+      hash = dex
+        ? await w.client.writeContract({ address: cfg.router, abi: routerAbi, functionName: "swapExactETHForTokens", args: [minOut, [cfg.weth, data.coin.token], w.address, deadline], value: lastQuote.in })
+        : await w.client.writeContract({ address: cfg.launchpad, abi: launchpadAbi, functionName: "buy", args: [data.coin.token, minOut, w.address, deadline], value: lastQuote.in });
     } else {
-      const allowance = await pub.readContract({ address: data.coin.token, abi: tokenAbi, functionName: "allowance", args: [w.address, cfg.launchpad] });
+      const spender = dex ? cfg.router : cfg.launchpad;
+      const allowance = await pub.readContract({ address: data.coin.token, abi: tokenAbi, functionName: "allowance", args: [w.address, spender] });
       if (allowance < lastQuote.in) {
         btn.innerHTML = '<span class="spinner"></span> Approve in wallet';
-        const ah = await w.client.writeContract({ address: data.coin.token, abi: tokenAbi, functionName: "approve", args: [cfg.launchpad, lastQuote.in] });
+        const ah = await w.client.writeContract({ address: data.coin.token, abi: tokenAbi, functionName: "approve", args: [spender, lastQuote.in] });
         await pub.waitForTransactionReceipt({ hash: ah });
       }
       btn.innerHTML = '<span class="spinner"></span> Confirm in wallet';
-      hash = await w.client.writeContract({ address: cfg.launchpad, abi: launchpadAbi, functionName: "sell", args: [data.coin.token, lastQuote.in, minOut, w.address, deadline] });
+      hash = dex
+        ? await w.client.writeContract({ address: cfg.router, abi: routerAbi, functionName: "swapExactTokensForETH", args: [lastQuote.in, minOut, [data.coin.token, cfg.weth], w.address, deadline] })
+        : await w.client.writeContract({ address: cfg.launchpad, abi: launchpadAbi, functionName: "sell", args: [data.coin.token, lastQuote.in, minOut, w.address, deadline] });
     }
     btn.innerHTML = '<span class="spinner"></span> Confirming';
     const r = await pub.waitForTransactionReceipt({ hash });

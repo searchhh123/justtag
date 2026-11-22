@@ -79,6 +79,8 @@ app.get("/api/config", (c) =>
     rpcUrl: config.rpcUrl,
     explorer: config.explorer,
     launchpad: config.launchpad ?? null,
+    router: config.dexRouter,
+    weth: config.weth,
     presets: PRESETS,
     routes: ["holders", "owner", "buyback", "burn", "authors"],
     xLogin: !!config.xClientId,
@@ -163,7 +165,21 @@ app.get("/api/coin/:token", async (c) => {
         graduated: s.graduated,
         progress: Number(((cfg.curveSupply - s.realToken) * 10_000n) / cfg.curveSupply) / 100,
         feeBps: cfg.protocolFeeBps + cfg.creatorFeeBps,
+        priceWei: ((s.virtualEth * 10n ** 18n) / s.virtualToken).toString(),
+        liquidityWei: null as string | null,
       };
+      if (s.graduated && row.pair) {
+        // After graduation the live price comes from the Uniswap V2 pool reserves.
+        const [r0, r1] = (await publicClient.readContract({
+          address: row.pair as Address,
+          abi: [{ type: "function", name: "getReserves", stateMutability: "view", inputs: [], outputs: [{ type: "uint112" }, { type: "uint112" }, { type: "uint32" }] }],
+          functionName: "getReserves",
+        })) as readonly [bigint, bigint, number];
+        const wethIs0 = config.weth.toLowerCase() < row.token.toLowerCase();
+        const [rEth, rTok] = wethIs0 ? [r0, r1] : [r1, r0];
+        if (rTok > 0n) curve.priceWei = ((rEth * 10n ** 18n) / rTok).toString();
+        curve.liquidityWei = rEth.toString();
+      }
     } catch {
       /* RPC hiccup: serve DB data */
     }
